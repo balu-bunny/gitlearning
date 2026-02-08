@@ -14,3 +14,21 @@ class AutomationService:
                 # Minimal stub action handling
                 action = rule.get("action", {})
                 record["automation"] = action
+# Test cases for the AutomationService
+if __name__ == "__main__":
+    service = AutomationService()
+    
+    # Test case 1: Save a rule and run it
+    rule = {
+        "object_name": "TestObject",
+        "trigger": "on_create",
+        "action": {"type": "update_field", "field": "status", "value": "processed"}
+    }
+    service.save("tenant1", rule)
+    
+    record = {"id": 1, "name": "Test Record"}
+    service.run_rules("tenant1", "TestObject", "on_create", record)
+    
+    assert record.get("automation") == {"type": "update_field", "field": "status", "value": "processed"}, "Test case 1 failed"
+    
+    print("All test cases passed!")
