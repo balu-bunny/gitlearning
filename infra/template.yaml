@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Salesforce-like platform MVP (API, DB, Auth, Frontend)
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: platform-mvp
+  Environment:
+    Type: String
+    Default: dev
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${ProjectName}-${Environment}-userpool'
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${ProjectName}-${Environment}-client'
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  MetadataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-${Environment}-metadata'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenant_id
+          AttributeType: S
+        - AttributeName: entity_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenant_id
+          KeyType: HASH
+        - AttributeName: entity_key
+          KeyType: RANGE
+
+  RecordsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-${Environment}-records'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenant_id
+          AttributeType: S
+        - AttributeName: record_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenant_id
+          KeyType: HASH
+        - AttributeName: record_key
+          KeyType: RANGE
+
+  PermissionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-${Environment}-permissions'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenant_id
+          AttributeType: S
+        - AttributeName: role_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenant_id
+          KeyType: HASH
+        - AttributeName: role_key
+          KeyType: RANGE
+
+  AutomationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-${Environment}-automations'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tenant_id
+          AttributeType: S
+        - AttributeName: rule_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenant_id
+          KeyType: HASH
+        - AttributeName: rule_key
+          KeyType: RANGE
+
+  PlatformLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: platform-mvp-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:* 
+                Resource: '*'
+
+  PlatformLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-${Environment}-api'
+      Runtime: python3.11
+      Handler: app.main.handler
+      Role: !GetAtt PlatformLambdaRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {"statusCode": 200, "body": "Deploy backend separately"}
+      Environment:
+        Variables:
+          METADATA_TABLE: !Ref MetadataTable
+          RECORDS_TABLE: !Ref RecordsTable
+          PERMISSIONS_TABLE: !Ref PermissionsTable
+          AUTOMATIONS_TABLE: !Ref AutomationsTable
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${ProjectName}-${Environment}-http'
+      ProtocolType: HTTP
+
+Outputs:
+  ApiEndpoint:
+    Value: !Sub 'https://${HttpApi.ApiId}.execute-api.${AWS::Region}.amazonaws.com'
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient

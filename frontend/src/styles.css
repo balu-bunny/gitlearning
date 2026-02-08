@@ -1,0 +1,22 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #1d1d1f;
+  background: #f4f6fb;
+}
+
+.app {
+  max-width: 960px;
+  margin: 32px auto;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+header h1 { margin: 0 0 8px 0; }
+section { margin-top: 24px; }
+label { display: block; margin: 8px 0 4px; }
+input, textarea { width: 100%; padding: 8px; border: 1px solid #d0d7e2; border-radius: 8px; }
+textarea { min-height: 80px; }
+button { margin-top: 12px; padding: 10px 16px; border: none; background: #2f6fed; color: white; border-radius: 8px; cursor: pointer; }
+pre { background: #0e1726; color: #d2e6ff; padding: 12px; border-radius: 8px; overflow: auto; }
