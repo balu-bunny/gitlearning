@@ -5,6 +5,7 @@ class AutomationService:
         self._rules: Dict[str, List[Dict[str, Any]]] = {}
 
     def save(self, tenant_id: str, rule: Dict[str, Any]):
+        print(f"Saving rule for tenant {tenant_id}: {rule}")
         self._rules.setdefault(tenant_id, []).append(rule)
         return rule
 

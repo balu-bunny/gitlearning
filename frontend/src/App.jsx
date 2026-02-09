@@ -21,6 +21,7 @@ export default function App() {
 
   async function saveLayout() {
     const layout = JSON.parse(layoutJson)
+    console.log('Saving layout:', { objectName, layout })
     const res = await fetch(`${API}/objects/${objectName}/layouts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
