@@ -7,7 +7,7 @@ class MetadataService:
         self._layouts: Dict[str, Dict[str, Any]] = {}
 
     def create_object(self, tenant_id: str, obj: Dict[str, Any]):
-        print(f"Creating object for tenant {tenant_id}: {obj}")
+        print(f"Creating object for tenant test {tenant_id}: {obj}")
         key = f"{tenant_id}:{obj['name']}"
         self._objects[key] = obj
         return obj
